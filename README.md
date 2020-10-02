@@ -15,7 +15,7 @@ Instudction:
 python3 create_playlist.py
 
 Technologies: 
-Youtube Data API v3 - https://developers.google.com/youtube/v3
-Spotify Web API - https://developer.spotify.com/documentation/web-api/
-Requests Library v 2.22.0 - https://requests.readthedocs.io/en/master/
-Youtube_dl v 2020.01.24 (allows you to download videos from Youtube) - https://github.com/ytdl-org/youtube-dl/
+- Youtube Data API v3 - https://developers.google.com/youtube/v3
+- Spotify Web API - https://developer.spotify.com/documentation/web-api/
+- Requests Library v 2.22.0 - https://requests.readthedocs.io/en/master/
+- Youtube_dl v 2020.01.24 (allows you to download videos from Youtube) - https://github.com/ytdl-org/youtube-dl/
