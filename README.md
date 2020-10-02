@@ -14,7 +14,7 @@ Instudction:
 2) Collect You Spotify User ID and Oauth Token From Spotfiy and add it to secrets.py file
 
 3) To Collect your User ID, Log into Spotify then go here: Account Overview and its your Username alt text
-To Collect your Oauth Token, Visit this url here: Get Oauth and click the Get Token button alt text
+To Collect your Oauth Token, Visit this url here: https://developer.spotify.com/console/post-playlists/ Get Oauth and click the Get Token button alt text
 Enable Oauth For Youtube and download the client_secrets.json
 
 4) Run the File
