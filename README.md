@@ -23,6 +23,16 @@ To interact with Spotify API, you need to obtain your Spotify User ID and an OAu
 
 * **User ID: ** Log in Spotify and go to your [Account Overview](https://www.spotify.com/account/overview). Your User ID is your Spotify username.
 * **OAuth Token: ** Visit the following URL yo get your OAuth Token: [Spotify OAuth Token Generator](https://developer.spotify.com/console/post-playlists/). Click the "Get Token" button to generate your token.
+
+* Configure Secrets:
+
+Create a `secrets.py` file in the project directory and add your Spotify User ID and OAuth Token as follows:
+
+```python
+spotify_token = "..."
+spotify_user_id = "..."
+```
+
 * Enable OAuth For Youtube and download the `client_secrets.json`.
 
 3. ### Run the Application
