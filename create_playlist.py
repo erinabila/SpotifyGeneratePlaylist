@@ -1,15 +1,23 @@
 import json
 import os
-
+import logging
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 import requests
 import youtube_dl
 
-from exceptions import ResponseException
-from secrets import spotify_token, spotify_user_id
+# Define constants for API scopes and URLs
+YOUTUBE_API_SCOPE = "https://www.googleapis.com/auth/youtube.readonly"
+SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1"
 
+# Define logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Move API credentials to environment variables
+SPOTIFY_TOKEN = os.environ.get("SPOTIFY_TOKEN")
+SPOTIFY_USER_ID = os.environ.get("SPOTIFY_USER_ID")
 
 class CreatePlaylist:
     def __init__(self):
@@ -27,7 +35,7 @@ class CreatePlaylist:
         client_secrets_file = "client_secret.json"
 
         # Get credentials and create an API client
-        scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
+        scopes = [YOUTUBE_API_SCOPE]
         flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
             client_secrets_file, scopes)
         credentials = flow.run_console()
@@ -55,8 +63,8 @@ class CreatePlaylist:
             # use youtube_dl to collect the song name & artist name
             video = youtube_dl.YoutubeDL({}).extract_info(
                 youtube_url, download=False)
-            song_name = video["track"]
-            artist = video["artist"]
+            song_name = video.get("track")
+            artist = video.get("artist")
 
             if song_name is not None and artist is not None:
                 # save all important info and skip any missing song and artist
@@ -78,14 +86,13 @@ class CreatePlaylist:
             "public": True
         })
 
-        query = "https://api.spotify.com/v1/users/{}/playlists".format(
-            spotify_user_id)
+        query = f"{SPOTIFY_API_BASE_URL}/users/{SPOTIFY_USER_ID}/playlists"
         response = requests.post(
             query,
             data=request_body,
             headers={
                 "Content-Type": "application/json",
-                "Authorization": "Bearer {}".format(spotify_token)
+                "Authorization": f"Bearer {SPOTIFY_TOKEN}"
             }
         )
         response_json = response.json()
@@ -95,24 +102,24 @@ class CreatePlaylist:
 
     def get_spotify_uri(self, song_name, artist):
         """Search For the Song"""
-        query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track&offset=0&limit=20".format(
-            song_name,
-            artist
-        )
+        query = f"{SPOTIFY_API_BASE_URL}/search?query=track%3A{song_name}+artist%3A{artist}&type=track&offset=0&limit=20"
         response = requests.get(
             query,
             headers={
                 "Content-Type": "application/json",
-                "Authorization": "Bearer {}".format(spotify_token)
+                "Authorization": f"Bearer {SPOTIFY_TOKEN}"
             }
         )
         response_json = response.json()
-        songs = response_json["tracks"]["items"]
+        songs = response_json.get("tracks", {}).get("items", [])
 
-        # only use the first song
-        uri = songs[0]["uri"]
-
-        return uri
+        if songs:
+            # only use the first song
+            uri = songs[0]["uri"]
+            return uri
+        else:
+            logger.warning(f"No Spotify track found for '{song_name}' by '{artist}'")
+            return None
 
     def add_song_to_playlist(self):
         """Add all liked songs into a new Spotify playlist"""
@@ -126,28 +133,29 @@ class CreatePlaylist:
         # create a new playlist
         playlist_id = self.create_playlist()
 
-        # add all songs into new playlist
+        if not playlist_id:
+            logger.error("Failed to create a Spotify playlist. Aborting.")
+            return
+
+        # add all songs into the new playlist
         request_data = json.dumps(uris)
 
-        query = "https://api.spotify.com/v1/playlists/{}/tracks".format(
-            playlist_id)
+        query = f"{SPOTIFY_API_BASE_URL}/playlists/{playlist_id}/tracks"
 
         response = requests.post(
             query,
             data=request_data,
             headers={
                 "Content-Type": "application/json",
-                "Authorization": "Bearer {}".format(spotify_token)
+                "Authorization": f"Bearer {SPOTIFY_TOKEN}"
             }
         )
 
         # check for valid response status
         if response.status_code != 200:
-            raise ResponseException(response.status_code)
-
-        response_json = response.json()
-        return response_json
-
+            logger.error(f"Failed to add songs to Spotify playlist. Status code: {response.status_code}")
+        else:
+            logger.info("Songs added to the Spotify playlist successfully.")
 
 if __name__ == '__main__':
     cp = CreatePlaylist()
